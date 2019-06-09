@@ -368,9 +368,9 @@ void rai::KinematicWorld::copy(const rai::KinematicWorld& K, bool referenceSwift
   for(Contact *c:K.contacts) new Contact(*frames(c->a.ID), *frames(c->b.ID), c);
   //copy swift reference
   if(referenceSwiftOnCopy) s->swift = K.s->swift;
+  calc_activeSets();
   q = K.q;
   qdot = K.qdot;
-  calc_activeSets();
 }
 
 bool rai::KinematicWorld::operator!() const { return this==&NoWorld; }
@@ -2030,7 +2030,7 @@ void rai::KinematicWorld::init(const Graph& G, bool addInsteadOfClear) {
     //    CHECK_EQ(n->keys(0),"frame","");
     CHECK(n->isGraph(), "frame must have value Graph");
     CHECK_LE(n->parents.N, 1,"frames must have no or one parent: specs=" <<*n <<' ' <<n->index);
-    
+
     Frame *b = NULL;
     if(!n->parents.N) b = new Frame(*this);
     if(n->parents.N==1) b = new Frame(node2frame(n->parents(0)->index)); //getFrameByName(n->parents(0)->keys.last()));
