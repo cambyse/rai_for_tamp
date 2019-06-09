@@ -196,7 +196,7 @@ void Node::write(std::ostream& os, bool pythonMode) const {
   } else if(isOfType<uint>()) {
     os <<": " <<*getValue<uint>();
   } else if(isOfType<bool>()) {
-    if(*getValue<bool>()) os <<": True"; else os <<": False";
+    if(*getValue<bool>()) os <<": true"; else os <<": false";
   } else if(isOfType<Type*>()) {
     os <<": "; get<Type*>()->write(os);
   } else {
