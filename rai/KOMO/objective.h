@@ -16,7 +16,7 @@ struct Objective {
   const rai::Enum<ObjectiveType> type;  ///< element of {sumOfSqr, inequality, equality}
   rai::String name;
   intA vars; //either a (0,1)-indicator per time slice, or a list of variable tuples
-  
+  arr scales;// indicate scale at each time slice
   Objective(const ptr<Feature>& _map, const ObjectiveType& _type) : map(_map), type(_type) {}
   ~Objective() {}
   

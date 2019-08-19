@@ -2534,12 +2534,14 @@ void KOMO::Conv_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, cons
   for(Objective *ob:komo.objectives) {
     CHECK_EQ(ob->vars.nd, 2, "in sparse mode, vars need to be tuples of variables");
     for(uint t=0;t<ob->vars.d0;t++) {
+      const auto scale = ob->scales.d0 ? ob->scales(t) : 1.0;
       WorldL Ktuple = komo.configurations.sub(convert<uint,int>(ob->vars[t]+(int)komo.k_order));
       uintA kdim = getKtupleDim(Ktuple);
       kdim.prepend(0);
 
       //query the task map and check dimensionalities of returns
       ob->map->__phi(y, (!!J?Jy:NoArr), Ktuple);
+
       if(!!J) CHECK_EQ(y.N, Jy.d0, "");
       if(!!J) CHECK_EQ(Jy.nd, 2, "");
       if(!!J) CHECK_EQ(Jy.d1, kdim.last(), "");
@@ -2547,7 +2549,7 @@ void KOMO::Conv_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, cons
       if(absMax(y)>1e10) RAI_MSG("WARNING y=" <<y);
 
       //write into phi and J
-      phi.setVectorBlock(y, M);
+      phi.setVectorBlock(scale * y, M); // appy scale on y
 
       if(!!J) {
         for(uint j=ob->vars.d1;j--;){
@@ -2555,7 +2557,7 @@ void KOMO::Conv_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, cons
             Jy.delColumns(kdim(j),kdim(j+1)-kdim(j)); //delete the columns that correspond to the prefix!!
           }
         }
-        for(uint i=0; i<y.N; i++) J(M+i) = Jy[i];
+        for(uint i=0; i<y.N; i++) J(M+i) = scale * Jy[i]; // appy scale on J
       }
 
       //counter for features phi
