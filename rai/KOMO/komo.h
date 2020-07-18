@@ -78,7 +78,8 @@ struct KOMO : NonCopyable {
   rai::Array<Objective*> objectives;     ///< list of tasks
   rai::Array<rai::Flag*> flags;     ///< list of flaggings that are applied to the frames/joints in the configurations and modify tasks
   rai::Array<rai::KinematicSwitch*> switches;  ///< list of kinematic switches along the motion
-  
+  bool freePrefix=false;
+
   //-- internals
   rai::KinematicWorld world;   ///< original world; which is the blueprint for all time-slice worlds (almost const: only makeConvexHulls modifies it)
   WorldL configurations;       ///< copies for each time slice; including kinematic switches; only these are optimized
@@ -130,7 +131,7 @@ struct KOMO : NonCopyable {
   //
   // lowest level way to define tasks: basic methods to add any single task or switch
   //
-  
+  void clearObjectives();
   /** THESE ARE THE TWO MOST IMPORTANT METHODS TO DEFINE A PROBLEM
    * they allow the user to add a cost task, or a kinematic switch in the problem definition
    * Typically, the user does not call them directly, but uses the many methods below
@@ -282,7 +283,7 @@ struct KOMO : NonCopyable {
   //
   
   //-- (not much in use..) specs gives as logic expressions in a Graph (or config file)
-  void clearObjectives();
+  void clearss();
 //  Task* addTask(const char* name, Feature *map, const ObjectiveType& termType); ///< manually add a task
   void setupConfigurations();   ///< this creates the @configurations@, that is, copies the original world T times (after setTiming!) perhaps modified by KINEMATIC SWITCHES and FLAGS
 //  arr getInitialization();      ///< this reads out the initial state trajectory after 'setupConfigurations'

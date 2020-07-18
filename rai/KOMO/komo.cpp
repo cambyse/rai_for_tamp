@@ -1417,9 +1417,9 @@ void KOMO::run() {
 //    ModGraphProblem selG(graph_problem);
 //    Conv_Graph_ConstrainedProblem C(selG);
     Conv_Graph_ConstrainedProblem C(graph_problem, logFile);
-    OptConstrained _opt(x, dual, C, rai::MAX(verbose-2, 0), NOOPT, logFile);
+    opt = new OptConstrained(x, dual, C, rai::MAX(verbose-2, 0), NOOPT, logFile);
 //    OptPrimalDual _opt(x, dual, C, rai::MAX(verbose-2, 0));
-    _opt.run();
+    opt->run();
     {
 //      testing primal dual:
 //      rai::wait();
@@ -1427,7 +1427,12 @@ void KOMO::run() {
 //      _opt.run();
     }
 
-    timeNewton += _opt.newton.timeNewton;
+//    std::ofstream os;
+//    os.open("/tmp/H_data", std::ios::out);
+//    os << _opt.newton.Hx;
+//    os.close();
+
+    timeNewton += opt->newton.timeNewton;
 #else
     BacktrackingGraphOptimization BGO(graph_problem);
     BGO.evaluate(x);
@@ -1448,6 +1453,7 @@ void KOMO::run() {
   }
   runTime = timerRead(true, timeZero);
   if(logFile) (*logFile) <<"\n] #end of KOMO_run_log" <<endl;
+
   if(verbose>0) {
     cout <<"** optimization time=" <<runTime
         <<" (kin:" <<timeKinematics <<" coll:" <<timeCollisions <<" feat:" <<timeFeatures <<" newton: " <<timeNewton <<")"
@@ -1834,11 +1840,16 @@ void KOMO::set_x(const arr& x, const uintA& selectedConfigurationsOnly) {
     configs = selectedConfigurationsOnly;
   }else{
     configs.setStraightPerm(T); //by default, we loop straight through all configurations
+    if(freePrefix)
+    {
+      configs.prepend(-1);
+      configs.prepend(-2);
+    }
   }
 
   //-- set the configurations' states
   uint x_count=0;
-  for(uint t:configs) {
+  for(int t:configs) {
     uint s = t+k_order;
     uint x_dim = dim_x(t);
     if(x_dim) {
@@ -2475,8 +2486,9 @@ void KOMO::Conv_MotionProblem_DenseProblem::getDimPhi() {
 void KOMO::Conv_MotionProblem_GraphProblem::getStructure(uintA& variableDimensions, intAA& featureVariables, ObjectiveTypeA& featureTypes) {
   CHECK_EQ(komo.configurations.N, komo.k_order+komo.T, "configurations are not setup yet: use komo.reset()");
   if(!!variableDimensions) {
-    variableDimensions.resize(komo.T);
-    for(uint t=0; t<komo.T; t++) variableDimensions(t) = komo.configurations(t+komo.k_order)->getJointStateDimension();
+    const auto start = komo.freePrefix ? 0 : komo.k_order; // first optimized frame
+    variableDimensions.resize(komo.T + komo.k_order - start);
+    for(uint t=start; t<komo.T + komo.k_order ; t++) variableDimensions(t-start) = komo.configurations(t)->getJointStateDimension();
   }
 
   if(!!featureVariables) featureVariables.clear();
@@ -2487,7 +2499,7 @@ void KOMO::Conv_MotionProblem_GraphProblem::getStructure(uintA& variableDimensio
     for(uint t=0;t<ob->vars.d0;t++) {
       WorldL Ktuple = komo.configurations.sub(convert<uint,int>(ob->vars[t]+(int)komo.k_order));
       uint m = ob->map->__dim_phi(Ktuple); //dimensionality of this task
-      if(!!featureVariables) featureVariables.append(ob->vars[t], m);
+      if(!!featureVariables) featureVariables.append(ob->vars[t] + int((komo.freePrefix ? komo.k_order : 0)), m);
       if(!!featureTypes) featureTypes.append(ob->type, m);
       M += m;
     }
@@ -2553,7 +2565,7 @@ void KOMO::Conv_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, cons
 
       if(!!J) {
         for(uint j=ob->vars.d1;j--;){
-          if(ob->vars(t,j)<0){
+          if(!komo.freePrefix && ob->vars(t,j)<0){
             Jy.delColumns(kdim(j),kdim(j+1)-kdim(j)); //delete the columns that correspond to the prefix!!
           }
         }
@@ -2675,6 +2687,7 @@ arr KOMO::getFrameState(double phase) {
 arr KOMO::getPath_decisionVariable() {
   CHECK_EQ(configurations.N, k_order+T, "configurations are not setup yet");
   arr x;
+  if(freePrefix) for(uint t=0; t<k_order; t++) x.append(configurations(t)->getJointState());
   for(uint t=0; t<T; t++) x.append(configurations(t+k_order)->getJointState());
   return x;
 }
