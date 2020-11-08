@@ -2,8 +2,6 @@ BASE   = ../..
 NAME   = $(shell basename `pwd`)
 OUTPUT = lib$(NAME).so
 
-OPTIM = fast_debug
-
 DEPEND_UBUNTU += g++ gnuplot
 
 X11 = 1
