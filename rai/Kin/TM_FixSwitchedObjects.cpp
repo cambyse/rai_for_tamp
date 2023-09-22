@@ -16,14 +16,14 @@
 uint TM_FixSwichedObjects::dim_phi(const WorldL& G) {
   uintA switchedBodies = getSwitchedBodies(*G.elem(-2), *G.elem(-1));
 //  if(order==2) switchedBodies.setAppend( getSwitchedBodies(*G.elem(-3), *G.elem(-2)) );
-  return switchedBodies.N*6;
+  return switchedBodies.N*7;
 }
 
 void TM_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& Ktuple) {
   //TODO: so far this only fixes switched objects to zero pose vel
   //better: constrain to zero relative velocity with BOTH, pre-attached and post-attached
   
-  uint M=6;
+  uint M=7; // M=6
   uintA switchedBodies = getSwitchedBodies(*Ktuple.elem(-2), *Ktuple.elem(-1));
 //  if(order==2) switchedBodies.setAppend( getSwitchedBodies(*G.elem(-3), *G.elem(-2)) );
   y.resize(M*switchedBodies.N).setZero();
@@ -38,7 +38,8 @@ void TM_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& Ktuple) {
     rai::Frame *b1 = Ktuple.elem(-1)->frames(id);    CHECK(&b1->K==Ktuple.elem(-1),"");
     CHECK_EQ(b0->ID, b1->ID, "");
     CHECK_EQ(b0->name, b1->name, "");
-//    cout <<"SWITCH " <<b0->parent->name <<'-' <<b0->name <<" => " <<b1->parent->name <<'-' <<b1->name <<endl;
+
+    //cout <<"SWITCH " <<b0->parent->name <<'-' <<b0->name <<" => " <<b1->parent->name <<'-' <<b1->name <<endl;
 
     if(b0->name.startsWith("slider")) continue; //warning: this introduces zeros in y and J -- but should be ok
     
@@ -73,9 +74,13 @@ void TM_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& Ktuple) {
       pos.order=1;
       pos.Feature::__phi(y({M*i,M*i+2})(), (!!J?J({M*i,M*i+2})():NoArr), Ktuple);
 
-      TM_AngVel rot(id);
+      TM_Default rot(TMT_quat, id);
       rot.order=1;
-      rot.phi(y({M*i+3,M*i+5})(), (!!J?J({M*i+3,M*i+5})():NoArr), Ktuple);
+      rot.Feature::__phi(y({M*i+3,M*i+6})(), (!!J?J({M*i+3,M*i+6})():NoArr), Ktuple);
+
+//      TM_AngVel rot(id);
+//      rot.order=1;
+//      rot.phi(y({M*i+3,M*i+5})(), (!!J?J({M*i+3,M*i+5})():NoArr), Ktuple);
 #endif
     } else if(order==2) { //absolute accelerations
 #if 0
@@ -97,9 +102,13 @@ void TM_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& Ktuple) {
       pos.order=2;
       pos.Feature::__phi(y({M*i,M*i+2})(), (!!J?J({M*i,M*i+2})():NoArr), Ktuple);
 
-      TM_AngVel rot(id);
+      TM_Default rot(TMT_quat, id);
       rot.order=2;
-      rot.phi(y({M*i+3,M*i+5})(), (!!J?J({M*i+3,M*i+5})():NoArr), Ktuple);
+      rot.Feature::__phi(y({M*i+3,M*i+6})(), (!!J?J({M*i+3,M*i+6})():NoArr), Ktuple);
+
+//      TM_AngVel rot(id);
+//      rot.order=2;
+//      rot.phi(y({M*i+3,M*i+5})(), (!!J?J({M*i+3,M*i+5})():NoArr), Ktuple);
 #endif
     } else NIY;
   }

@@ -38,7 +38,7 @@ template<> const char* rai::Enum<rai::BodyType>::names []= {
 // Frame
 //
 
-bool rai_Kin_frame_ignoreQuatNormalizationWarning = false;
+bool rai_Kin_frame_ignoreQuatNormalizationWarning = true;
 
 rai::Frame::Frame(KinematicWorld& _K, const Frame* copyFrame)
   : K(_K) {
