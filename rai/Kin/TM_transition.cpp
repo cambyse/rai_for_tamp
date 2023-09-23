@@ -14,7 +14,7 @@
 TM_Transition::TM_Transition(const rai::KinematicWorld& G, bool effectiveJointsOnly)
   : effectiveJointsOnly(effectiveJointsOnly) {
   posCoeff = rai::getParameter<double>("Motion/TaskMapTransition/posCoeff",.0);
-  velCoeff = rai::getParameter<double>("Motion/TaskMapTransition/velCoeff",.0);
+  velCoeff = rai::getParameter<double>("Motion/TaskMapTransition/velCoeff",.1);
   accCoeff = rai::getParameter<double>("Motion/TaskMapTransition/accCoeff",1.);
 
   order = 2;
