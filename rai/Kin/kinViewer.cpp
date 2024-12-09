@@ -147,7 +147,7 @@ void KinPathViewer::step() {
   if(T) {
     copy.orsDrawMarkers=false;
     gl->update(STRING("(time " <<tprefix+int(tt) <<'/' <<tprefix+int(T) <<")\n" <<text).p, true); //, false, false, true);
-    if(writeToFiles) write_ppm(gl->captureImage,STRING("vid/"<<std::setw(4)<<std::setfill('0')<<tprefix+int(tt)<<".ppm"));
+    if(writeToFiles) write_ppm(gl->captureImage,STRING("vid/"<< text << "-" << std::setw(4)<<std::setfill('0')<<tprefix+int(tt)<<".ppm"));
   }
   t++;
 }
